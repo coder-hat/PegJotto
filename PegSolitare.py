@@ -63,13 +63,13 @@ class PegBoard:
             self.turns_taken += 1
             self.selected_peg = None
             return removed_row, removed_column
-        else:
-            None
+        return None
 
     def is_legal_jump(self, landing_row, landing_column):
         if not self.selected_peg:
             return False  # no selected peg means no jump origin
         selected_row, selected_column  = self.selected_peg
+        i_between = lambda a, b: a - 1 if a > b else a + 1
         if (landing_row == selected_row):
             if abs(landing_column - selected_column) == 2:
                 between_column = i_between(selected_column, landing_column)
@@ -85,8 +85,21 @@ class PegBoard:
         else:
             return None # non-orthogonal
 
-def i_between(a, b):
-    return a - 1 if a > b else a + 1
+    def status_text(self):
+        return "Moves={} Pegs={}/{}".format(self.turns_taken, self.current_pegs, self.initial_pegs)
+
+    def print_the_board(self):
+        glyph = [" #", " o", " .", " *"]
+        for r, row in enumerate(pb.board):
+            for c, cell_value in enumerate(row):
+                ofs = 1 if self.selected_peg == (r, c) else 0
+                s = glyph[cell_value + ofs]
+                print(s, end='')
+            print()
+
+
+# def i_between(a, b):
+#     return a - 1 if a > b else a + 1
             
 #----- GUI functions
 
@@ -102,35 +115,25 @@ def click_handler(pb, w, r, c, pgi):
             pb.select_peg(r,c)
         else:
             pb.jump_and_remove(r, c)
-    # print_the_board(pb)
-    print_stats(pb)
-    update_widget_grid(pb, w, pgi)
+    print(pb.status_text())
+    update_display(pb, w, pgi)
 
-def update_widget_grid(pb, w, pgi):
+def update_display(pb, w, pgi):
+    # refresh every widget in the PegBoard portion of the display grid
     for r, row in enumerate(pb.board):
         for c, cell_value in enumerate(row):
             if cell_value != CV_OFF:
                 widget = w.grid_slaves(row=r, column=c)[0]
                 widget.config(image=pgi[cell_value])
                 widget.config(highlightbackground="white")
+    # highight the selected peg (if a peg is selected)
     if pb.selected_peg:
         r, c = pb.selected_peg
         widget = w.grid_slaves(row=r, column=c)[0]
         widget.config(highlightbackground="green")
-
-#----- debug utility functions
-
-def print_the_board(pb):
-    glyph = [" #", " o", " .", " *"]
-    for r, row in enumerate(pb.board):
-        for c, cell_value in enumerate(row):
-            ofs = 1 if pb.selected_peg == (r, c) else 0
-            s = glyph[cell_value + ofs]
-            print(s, end='')
-        print()
-
-def print_stats(pb):
-    print("moves={} pegs={}/{}".format(pb.turns_taken, pb.current_pegs, pb.initial_pegs))
+    # update the status text label
+    widget = w.grid_slaves(row=PegBoard.ROW_COUNT, column=0)[0]
+    widget.config(text=pb.status_text())
 
 #----- Program Main
 
@@ -139,6 +142,7 @@ if __name__ == "__main__":
     pb = PegBoard()
     
     window = tk.Tk()
+    window.title("Peg Solitaire")
 
     p_image_root = Path('/Users/ksdj/Pictures/Art/PegSolitaireImages/')
     peg_images = [get_photo_image(p_image_root.joinpath(png_name)) for png_name in ("Null32.png", "BlackRing32.png", "BluePeg32.png")]
@@ -152,8 +156,10 @@ if __name__ == "__main__":
                 cell_widget = tk.Button(
                     image=peg_images[cell_value], 
                     command=lambda pb=pb, w=window, r=irow, c=icol, pgi=peg_images: click_handler(pb, w, r, c, pgi)
-                    )
+                )
             cell_widget.grid(row=irow, column=icol)
             # button.bind("<Button-1>", button_clicked)
+    lbl_status = tk.Label(text=pb.status_text())
+    lbl_status.grid(row=PegBoard.ROW_COUNT, column=0, columnspan=PegBoard.COL_COUNT)
 
     window.mainloop()
