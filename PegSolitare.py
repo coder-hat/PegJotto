@@ -96,10 +96,6 @@ class PegBoard:
                 s = glyph[cell_value + ofs]
                 print(s, end='')
             print()
-
-
-# def i_between(a, b):
-#     return a - 1 if a > b else a + 1
             
 #----- GUI functions
 
