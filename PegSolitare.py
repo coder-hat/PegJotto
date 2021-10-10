@@ -1,5 +1,5 @@
 from pathlib import Path
-from PIL import Image, ImageTk
+from PIL import Image, ImageDraw, ImageTk
 import tkinter as tk
 
 # Board Position [C]ell [V]alues
@@ -99,9 +99,17 @@ class PegBoard:
             
 #----- GUI functions
 
-def get_photo_image(png_file):
+def load_photo_image(png_file):
     image = Image.open(str(png_file))
     photo = ImageTk.PhotoImage(image)
+    return photo
+
+def make_photo_image(background="white", outline="white", fill="white"):
+    im = Image.new(mode="RGB", size=(64, 64))
+    im_draw = ImageDraw.Draw(im)
+    im_draw.rectangle([(0,0), (63, 63)], outline=background, fill=background)
+    im_draw.ellipse([(0,0), (63, 63)], outline=outline, width=4, fill=fill)
+    photo = ImageTk.PhotoImage(im)
     return photo
 
 def click_handler(pb, w, r, c, pgi):
@@ -121,15 +129,17 @@ def update_display(pb, w, pgi):
             if cell_value != CV_OFF:
                 widget = w.grid_slaves(row=r, column=c)[0]
                 widget.config(image=pgi[cell_value])
-                widget.config(highlightbackground="white")
+                widget.config(background="white")
     # highight the selected peg (if a peg is selected)
+    # WARNING: on MacOS, substitute "highlightbackground=" for "background=" above and below 
     if pb.selected_peg:
         r, c = pb.selected_peg
         widget = w.grid_slaves(row=r, column=c)[0]
-        widget.config(highlightbackground="green")
+        widget.config(background="green")
     # update the status text label
     widget = w.grid_slaves(row=PegBoard.ROW_COUNT, column=0)[0]
     widget.config(text=pb.status_text())
+
 
 #----- Program Main
 
@@ -140,8 +150,15 @@ if __name__ == "__main__":
     window = tk.Tk()
     window.title("Peg Solitaire")
 
-    p_image_root = Path('/Users/ksdj/Pictures/Art/PegSolitaireImages/')
-    peg_images = [get_photo_image(p_image_root.joinpath(png_name)) for png_name in ("Null32.png", "BlackRing32.png", "BluePeg32.png")]
+    try:
+        p_image_root = Path('./PegSolitaireImages/')
+        peg_images = [load_photo_image(p_image_root.joinpath(png_name)) for png_name in ("Null32.png", "BlackRing32.png", "BluePeg32.png")]
+    except:
+        peg_images = [
+            make_photo_image(background="white", outline="white", fill="white"),  # "blank" peg
+            make_photo_image(background="white", outline="black", fill="white"),  # "black ring" peg
+            make_photo_image(background="white", outline="black", fill="blue")    # blue peg
+        ]
 
     for irow in range(PegBoard.ROW_COUNT):
         for icol in range(PegBoard.COL_COUNT):
