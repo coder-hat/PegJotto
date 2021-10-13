@@ -105,9 +105,10 @@ def load_photo_image(png_file):
     return photo
 
 def make_photo_image(background="white", outline="white", fill="white"):
-    im = Image.new(mode="RGB", size=(64, 64))
+    im = Image.new(mode="RGBA", size=(64, 64))
     im_draw = ImageDraw.Draw(im)
     im_draw.rectangle([(0,0), (63, 63)], outline=background, fill=background)
+    im.putalpha(0)  # make transparent
     im_draw.ellipse([(0,0), (63, 63)], outline=outline, width=4, fill=fill)
     photo = ImageTk.PhotoImage(im)
     return photo
@@ -167,7 +168,8 @@ if __name__ == "__main__":
                 cell_widget = tk.Label(image=peg_images[cell_value])
             else:
                 cell_widget = tk.Button(
-                    image=peg_images[cell_value], 
+                    image=peg_images[cell_value],
+                    bd=0,
                     command=lambda pb=pb, w=window, r=irow, c=icol, pgi=peg_images: click_handler(pb, w, r, c, pgi)
                 )
             cell_widget.grid(row=irow, column=icol)
