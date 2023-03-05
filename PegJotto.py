@@ -21,7 +21,7 @@ class Peg(Enum):
     def __init__(self, color, tla):
         self.color = color  # TkInter-compatible color text string
         self.tla = tla  # Three-Letter-Acronym
-        
+
     @property
     def short_name(self):
         return self.tla
@@ -36,12 +36,17 @@ class GameState:
         self.code_length = code_length
         self.allowed_guesses = allowed_guesses
         self.score_pegs_as_code = score_pegs_as_code
-        self.reset()
-    
+        # Each game requires resetting the following properties.
+        self.used_guesses = 0
+        self.guesses = []
+        self.code = []
+        self.game_over = False
+        self.game_won = False
+
     def reset(self):
         self.used_guesses = 0
         self.guesses = []
-        self.code = None
+        self.code = []
         self.game_over = False
         self.game_won = False
 
@@ -50,7 +55,7 @@ class GameState:
 
     def make_random_code(self):
         peg_list = [p for p in Peg if self.is_code_peg(p)]
-        return tuple(choices(peg_list, k=self.code_length))
+        return choices(peg_list, k=self.code_length)
 
     def set_code(self, code=None):
         if code and len(code) != self.code_length:
@@ -67,8 +72,8 @@ class GameState:
         Updates game_over and game_won flag values relative to this guess submission.
         '''
         score = self.score_guess(guess)
-        self.guesses.append(tuple(guess, score))
-        self.game_over = len(self.get_guesses) >= self.allowed_guesses
+        self.guesses.append((guess, score))
+        self.game_over = len(self.guesses) >= self.allowed_guesses
         self.game_won = sum((1 if p == Peg.BLACK else 0 for p in score))
 
     def score_guess(self, guess):
@@ -91,6 +96,3 @@ class GameState:
             except ValueError:
                 score.append(Peg.EMPTY)
         return tuple(score)
-        
-    def get_guesses(self):
-        return self.get_guesses

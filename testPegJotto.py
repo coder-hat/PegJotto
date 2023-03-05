@@ -8,11 +8,11 @@ class TestGameState(unittest.TestCase):
 
     def test_set_and_get_code(self):
         gs = GameState()
-        self.assertIsNone(gs.get_code(), 'before set_code')
-        expect = (Peg.RED, Peg.GREEN, Peg.BLUE, Peg.EMPTY)
+        self.assertEqual(len(gs.get_code()), 0, 'before set_code')
+        expect = [Peg.RED, Peg.GREEN, Peg.BLUE, Peg.EMPTY]
         gs.set_code(expect)
         actual = gs.get_code()
-        self.assertTupleEqual(actual, expect, 'After set_code')
+        self.assertListEqual(actual, expect, 'After set_code')
 
     def test_score_guess(self):
         gs = GameState(code_length=3)
@@ -32,6 +32,19 @@ class TestGameState(unittest.TestCase):
             guess, expect = test_data[msg_key]
             actual = gs.score_guess(guess)
             self.assertCountEqual(actual, expect, msg_key)
+
+    def test_is_code_peg(self):
+        gs = GameState(score_pegs_as_code=True)
+        for p in Peg:
+            expect = True # ALL pegs are code pegs
+            actual = gs.is_code_peg(p)
+            self.assertEqual(actual, expect, f"peg={p}")
+        gs = GameState(score_pegs_as_code=False)
+        for p in Peg:
+            expect = p not in (Peg.BLACK, Peg.WHITE)
+            actual = gs.is_code_peg(p)
+            self.assertEqual(actual, expect, f"peg={p}")
+
 
 if __name__ == '__main__':
     unittest.main()
